@@ -15,22 +15,22 @@ function loadSidebar() {
             </div>
 
             <nav class="nav flex-column nav-ufu">
-                <a href="dashboard.html" class="nav-link" id="link-dashboard">
+                <a href="dashboard.php" class="nav-link" id="link-dashboard">
                     <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
                 </a>
-                <a href="comunidades.html" class="nav-link" id="link-comunidades">
+                <a href="comunidades.php" class="nav-link" id="link-comunidades">
                     <i class="bi bi-people-fill"></i> <span>Comunidades</span>
                 </a>
-                <a href="quiz.html" class="nav-link" id="link-quiz">
+                <a href="quiz.php" class="nav-link" id="link-quiz">
                     <i class="bi bi-ui-checks"></i> <span>Quiz</span>
                 </a>
-                <a href="flashcards.html" class="nav-link" id="link-flashcards">
+                <a href="flashcards.php" class="nav-link" id="link-flashcards">
                     <i class="bi bi-card-heading"></i> <span>Flashcards</span>
                 </a>
-                <a href="caderno.html" class="nav-link" id="link-caderno">
+                <a href="caderno.php" class="nav-link" id="link-caderno">
                     <i class="bi bi-journal-bookmark-fill"></i> <span>Caderno</span>
                 </a>
-                <a href="calendario.html" class="nav-link" id="link-calendario">
+                <a href="calendario.php" class="nav-link" id="link-calendario">
                     <i class="bi bi-calendar-event"></i> <span>Calendário</span>
                 </a>
             </nav>
@@ -59,11 +59,14 @@ function loadSidebar() {
         $(this).find('i').attr('class', collapsed ? 'bi bi-chevron-right' : 'bi bi-chevron-left');
     });
 
-    const path = window.location.pathname.split("/").pop() || "dashboard.html";
+    const path = window.location.pathname.split("/").pop() || "dashboard.php";
     const links = {
-        "dashboard.html": "link-dashboard", "comunidades.html": "link-comunidades",
-        "quiz.html": "link-quiz", "flashcards.html": "link-flashcards",
-        "caderno.html": "link-caderno", "calendario.html": "link-calendario"
+    "dashboard.php": "link-dashboard",
+    "comunidades.php": "link-comunidades",
+    "quiz.php": "link-quiz",
+    "flashcards.php": "link-flashcards",
+    "caderno.php": "link-caderno",
+    "calendario.php": "link-calendario"
     };
     if (links[path]) $(`#${links[path]}`).addClass('active');
 }

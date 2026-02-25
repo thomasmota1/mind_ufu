@@ -1,4 +1,29 @@
 <?php
+<<<<<<< HEAD
+=======
+// ===== CORS =====
+header("Access-Control-Allow-Origin: http://127.0.0.1:5500");
+// se quiser liberar tudo em ambiente local, pode usar:
+// header("Access-Control-Allow-Origin: *");
+
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Content-Type: application/json; charset=utf-8");
+
+// Resposta para preflight (OBRIGATÓRIO)
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+// =================
+
+// Mostrar erros (desenvolvimento)
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
+include('db.php');
+//--
+>>>>>>> 3a38f99 (Adiciona arquivos iniciais do projeto mind_ufu + cadastro)
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 header('Content-Type: application/json; charset=utf-8');
