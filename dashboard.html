@@ -72,7 +72,7 @@
             <h5 class="fw-bold mb-3">Acesso Rápido</h5>
             <div class="row g-3">
                 <div class="col-md-4">
-                    <a href="caderno.html" class="text-decoration-none">
+                    <a href="caderno.php" class="text-decoration-none">
                         <div class="card border-0 shadow-sm p-4 hover-scale text-center">
                             <i class="bi bi-journal-plus fs-1 text-primary mb-2"></i>
                             <h6 class="fw-bold text-dark">Nova Anotação</h6>
@@ -80,7 +80,7 @@
                     </a>
                 </div>
                 <div class="col-md-4">
-                    <a href="comunidades.html" class="text-decoration-none">
+                    <a href="comunidades.php" class="text-decoration-none">
                         <div class="card border-0 shadow-sm p-4 hover-scale text-center">
                             <i class="bi bi-people fs-1 text-info mb-2"></i>
                             <h6 class="fw-bold text-dark">Ver Grupos</h6>
