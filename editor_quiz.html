@@ -31,13 +31,21 @@
         <div class="card-body">
             <h5 class="card-title text-primary fw-bold mb-3">Informações Básicas</h5>
             <div class="row g-2">
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <label class="form-label small text-muted">Título</label>
                     <input type="text" id="editTitulo" class="form-control fw-bold">
                 </div>
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <label class="form-label small text-muted">Descrição</label>
                     <input type="text" id="editDesc" class="form-control">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="editPermiteSalvar" checked>
+                        <label class="form-check-label small" for="editPermiteSalvar">
+                            Permitir salvar antes de fazer
+                        </label>
+                    </div>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
                     <button class="btn btn-outline-primary w-100" onclick="salvarDetalhes()">
@@ -107,18 +115,31 @@
 <script>
     const idQuiz = new URLSearchParams(window.location.search).get('id');
 
+    // Obter ID do usuário logado
+    function getUsuarioId() {
+        const userData = JSON.parse(localStorage.getItem('usuario') || '{}');
+        return userData.id || 0;
+    }
+
     $(document).ready(() => {
+        // Verificar se está logado
+        if(!getUsuarioId()) {
+            window.location.href = 'index.html';
+            return;
+        }
+
         if(!idQuiz) { alert("Erro: ID faltando"); window.history.back(); }
         carregarDadosIniciais();
     });
 
     function carregarDadosIniciais() {
-        $.get('php/api_comunidades.php', { acao: 'get_quiz_full', quiz_id: idQuiz }, function(res){
+        $.get('php/api_comunidades.php', { acao: 'get_quiz_full', quiz_id: idQuiz, usuario_id: getUsuarioId() }, function(res){
             let data = typeof res === 'string' ? JSON.parse(res) : res;
 
             // Preenche info básica
             $('#editTitulo').val(data.quiz.titulo);
             $('#editDesc').val(data.quiz.descricao);
+            $('#editPermiteSalvar').prop('checked', data.quiz.permite_salvar_antes == 1 || data.quiz.permite_salvar_antes === null);
             
             let html = '';
             if(data.perguntas.length > 0) {
@@ -146,11 +167,13 @@
     }
 
     function salvarDetalhes() {
-        $.post('php/api_comunidades.php', { 
-            acao: 'editar_quiz_info', 
-            quiz_id: idQuiz, 
-            titulo: $('#editTitulo').val(), 
-            descricao: $('#editDesc').val() 
+        $.post('php/api_comunidades.php', {
+            acao: 'editar_quiz_info',
+            quiz_id: idQuiz,
+            titulo: $('#editTitulo').val(),
+            descricao: $('#editDesc').val(),
+            permite_salvar_antes: $('#editPermiteSalvar').is(':checked') ? 1 : 0,
+            usuario_id: getUsuarioId()
         }, () => alert("Informações atualizadas com sucesso!"));
     }
 
@@ -169,7 +192,8 @@
             quiz_id: idQuiz,
             enunciado: enunciado,
             opcoes: opcoes,
-            correta: corretaIndex
+            correta: corretaIndex,
+            usuario_id: getUsuarioId()
         }, function(res) {
             let data = typeof res === 'string' ? JSON.parse(res) : res;
             if(data.status === 'sucesso') {
@@ -187,13 +211,13 @@
 
     function excluirPergunta(pid) {
         if(confirm("Apagar esta pergunta?")) {
-            $.post('php/api_comunidades.php', { acao: 'excluir_pergunta', pergunta_id: pid }, () => carregarDadosIniciais());
+            $.post('php/api_comunidades.php', { acao: 'excluir_pergunta', pergunta_id: pid, usuario_id: getUsuarioId() }, () => carregarDadosIniciais());
         }
     }
 
     function deletarQuizInteiro() {
         if(confirm("⚠️ PERIGO: Isso apagará o quiz e TODAS as perguntas permanentemente. Continuar?")) {
-            $.post('php/api_comunidades.php', { acao: 'excluir_quiz', quiz_id: idQuiz }, function(){
+            $.post('php/api_comunidades.php', { acao: 'excluir_quiz', quiz_id: idQuiz, usuario_id: getUsuarioId() }, function(){
                 window.location.href = document.referrer; // Volta pra tela anterior
             });
         }
@@ -201,7 +225,7 @@
 
     function publicarQuiz() {
         if(confirm("Tem certeza? Ao publicar, o quiz ficará visível para todos os alunos da comunidade.")) {
-            $.post('php/api_comunidades.php', { acao: 'publicar_quiz', quiz_id: idQuiz }, function(){
+            $.post('php/api_comunidades.php', { acao: 'publicar_quiz', quiz_id: idQuiz, usuario_id: getUsuarioId() }, function(){
                 alert("✅ Quiz Publicado com Sucesso!");
                 window.location.href = document.referrer;
             });

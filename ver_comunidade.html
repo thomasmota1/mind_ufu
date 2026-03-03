@@ -27,7 +27,7 @@
     <div id="sidebar-container"></div>
 
     <main class="main-content p-4">
-        <a href="comunidades.html" class="btn btn-link text-decoration-none text-muted mb-3 ps-0">
+        <a href="comunidades.php" class="btn btn-link text-decoration-none text-muted mb-3 ps-0">
             <i class="bi bi-arrow-left"></i> Voltar para Comunidades
         </a>
 
@@ -47,30 +47,51 @@
                 </div>
             </div>
 
-            <ul class="nav nav-tabs mb-4">
-                <li class="nav-item"><a class="nav-link active">Mural</a></li>
-                <li class="nav-item"><a class="nav-link">Atividades</a></li>
-                <li class="nav-item"><a class="nav-link">Membros</a></li>
+            <ul class="nav nav-tabs mb-4" id="tabs-comunidade">
+                <li class="nav-item"><a class="nav-link active" data-tab="mural">Mural</a></li>
+                <li class="nav-item"><a class="nav-link" data-tab="atividades">Atividades</a></li>
+                <li class="nav-item"><a class="nav-link" data-tab="membros">Membros</a></li>
             </ul>
 
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="fw-bold text-dark">Questionários & Atividades</h4>
-                        <button class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalQuiz">
-                            <i class="bi bi-plus-lg"></i> Novo Quiz
-                        </button>
-                    </div>
-
-                    <div id="lista-quiz" class="list-group list-group-flush shadow-sm rounded bg-white border-0">
+            <!-- TAB: MURAL -->
+            <div id="tab-mural" class="tab-content-area">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="fw-bold text-dark">Questionários & Atividades</h4>
+                            <button class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalQuiz">
+                                <i class="bi bi-plus-lg"></i> Novo Quiz
+                            </button>
                         </div>
-                </div>
 
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm p-3">
-                        <h6 class="fw-bold text-muted text-uppercase small">Sobre</h6>
-                        <p class="small text-muted mb-0">Bem-vindo! Aqui encontras materiais e testes criados pelos membros para auxiliar nos estudos.</p>
+                        <div id="lista-quiz" class="list-group list-group-flush shadow-sm rounded bg-white border-0">
+                        </div>
                     </div>
+
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm p-3">
+                            <h6 class="fw-bold text-muted text-uppercase small">Sobre</h6>
+                            <p class="small text-muted mb-0">Bem-vindo! Aqui encontras materiais e testes criados pelos membros para auxiliar nos estudos.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: ATIVIDADES -->
+            <div id="tab-atividades" class="tab-content-area" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold text-dark">Atividades</h4>
+                </div>
+                <div id="lista-atividades" class="list-group list-group-flush shadow-sm rounded bg-white border-0">
+                </div>
+            </div>
+
+            <!-- TAB: MEMBROS -->
+            <div id="tab-membros" class="tab-content-area" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold text-dark">Membros</h4>
+                </div>
+                <div id="lista-membros" class="list-group list-group-flush shadow-sm rounded bg-white border-0">
                 </div>
             </div>
         </div>
@@ -103,27 +124,68 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="assets/js/sidebar.js"></script>
+<script src="assets/js/sidebar.js?v=2"></script>
 
 <script>
-   
-    const API_URL = 'http://localhost/mind_ufu/php/api_comunidades.php'; 
+
+    const API_URL = 'php/api_comunidades.php';
+    let quizzesSalvos = new Set(); // IDs dos quizzes já salvos pelo usuário
+
+    // Obter ID do usuário logado
+    function getUsuarioId() {
+        const userData = JSON.parse(localStorage.getItem('usuario') || '{}');
+        return userData.id || 0;
+    }
 
     $(document).ready(() => {
         if(typeof loadSidebar === 'function') loadSidebar();
-        
+
+        // Verificar se está logado
+        if(!getUsuarioId()) {
+            window.location.href = 'index.html';
+            return;
+        }
+
         const id = new URLSearchParams(window.location.search).get('id');
-        
+
         if(id) {
             carregarDetalhes(id);
+            carregarQuizzesSalvos();
         } else {
             alert("Comunidade não identificada.");
-            window.location.href = 'comunidades.html';
+            window.location.href = 'comunidades.php';
         }
+
+        // Sistema de abas
+        $('#tabs-comunidade .nav-link').click(function() {
+            const tab = $(this).data('tab');
+
+            $('#tabs-comunidade .nav-link').removeClass('active');
+            $(this).addClass('active');
+
+            $('.tab-content-area').hide();
+            $(`#tab-${tab}`).fadeIn(200);
+
+            // Carregar conteúdo da aba
+            if(tab === 'membros') {
+                carregarMembros();
+            } else if(tab === 'atividades') {
+                carregarAtividades();
+            }
+        });
     });
 
+    function carregarQuizzesSalvos() {
+        $.get(API_URL, { acao: 'listar_meus_quizzes', usuario_id: getUsuarioId() }, function(res) {
+            let lista = (typeof res === 'string') ? JSON.parse(res) : res;
+            if(Array.isArray(lista)) {
+                lista.forEach(q => quizzesSalvos.add(q.id));
+            }
+        });
+    }
+
     function carregarDetalhes(id) {
-        $.get(API_URL, { acao: 'detalhes', id: id })
+        $.get(API_URL, { acao: 'detalhes', id: id, usuario_id: getUsuarioId() })
             .done(function(res) {
                 let data = (typeof res === 'string') ? JSON.parse(res) : res;
 
@@ -140,11 +202,20 @@
                     if(quizzes && quizzes.length > 0) {
                         quizzes.forEach(q => {
                             const badge = q.publicado == 0 ? '<span class="badge bg-warning text-dark ms-2 small">Rascunho</span>' : '';
-                            
-                            const btnSalvar = `
-                            <button onclick="salvarParaDepois(event, ${q.id})" class="btn btn-sm btn-outline-primary ms-2" title="Salvar para fazer depois">
-                                <i class="bi bi-bookmark-plus"></i>
-                            </button>`;
+
+                            // Botão salvar com controle de permite_salvar_antes
+                            let btnSalvar = '';
+                            const permiteSalvar = q.permite_salvar_antes == 1 || q.permite_salvar_antes === null;
+                            if(permiteSalvar && q.publicado == 1) {
+                                const jaSalvo = quizzesSalvos.has(parseInt(q.id));
+                                const icone = jaSalvo ? 'bi-bookmark-fill' : 'bi-bookmark-plus';
+                                const classe = jaSalvo ? 'btn-primary' : 'btn-outline-primary';
+                                const titulo = jaSalvo ? 'Já salvo' : 'Salvar para fazer depois';
+                                btnSalvar = `
+                                <button onclick="salvarParaDepois(event, ${q.id}, this)" class="btn btn-sm ${classe} ms-2" title="${titulo}" id="btn-salvar-${q.id}">
+                                    <i class="bi ${icone}"></i>
+                                </button>`;
+                            }
 
                             let botoesAdmin = '';
                             if(q.criador_id == myId) {
@@ -169,11 +240,11 @@
                                             ${q.titulo} ${badge}
                                         </div>
                                         <small class="text-muted">
-                                            Por: <span class="fw-bold text-dark">${q.autor_nome || 'Desconhecido'}</span> 
+                                            Por: <span class="fw-bold text-dark">${q.autor_nome || 'Desconhecido'}</span>
                                             • ${q.descricao || 'Sem descrição'}
                                         </small>
                                     </div>
-                                    
+
                                     <div class="d-flex align-items-center">
                                         ${btnSalvar}
                                         ${botoesAdmin}
@@ -208,7 +279,8 @@
             acao: 'criar_quiz',
             comunidade_id: id,
             titulo: titulo,
-            descricao: desc
+            descricao: desc,
+            usuario_id: getUsuarioId()
         }, function(res) {
             let data = (typeof res === 'string') ? JSON.parse(res) : res;
 
@@ -223,20 +295,119 @@
         });
     }
 
-    function salvarParaDepois(e, id) {
+    function salvarParaDepois(e, id, btn) {
         e.stopPropagation(); // Impede abrir o quiz ao clicar no botão
-        
-        $.post(API_URL, { acao: 'salvar_quiz_lista', quiz_id: id }, function(res) {
+
+        $.post(API_URL, { acao: 'salvar_quiz_lista', quiz_id: id, usuario_id: getUsuarioId() }, function(res) {
             let data = (typeof res === 'string') ? JSON.parse(res) : res;
-            // Mostra mensagem de sucesso ou aviso se já estava salvo
-            alert(data.msg);
+
+            // Feedback visual no botão
+            const $btn = $(btn);
+            $btn.removeClass('btn-outline-primary').addClass('btn-primary');
+            $btn.find('i').removeClass('bi-bookmark-plus').addClass('bi-bookmark-fill');
+            $btn.attr('title', 'Salvo!');
+
+            // Adicionar à lista de salvos
+            quizzesSalvos.add(parseInt(id));
         });
+    }
+
+    function carregarAtividades() {
+        // Mostrar loading
+        $('#lista-atividades').html('<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div> Carregando...</div>');
+
+        const id = new URLSearchParams(window.location.search).get('id');
+        $.get(API_URL, { acao: 'detalhes', id: id, usuario_id: getUsuarioId() })
+            .done(function(res) {
+                let data = (typeof res === 'string') ? JSON.parse(res) : res;
+                const quizzes = data.quiz || [];
+                const publicados = quizzes.filter(q => q.publicado == 1);
+
+                let html = '';
+                if(publicados.length > 0) {
+                    publicados.forEach(q => {
+                        html += `
+                        <div class="list-group-item p-3 d-flex align-items-center">
+                            <div class="rounded-circle bg-light p-2 me-3 text-primary">
+                                <i class="bi bi-clipboard-check fs-4"></i>
+                            </div>
+                            <div style="flex-grow: 1; cursor: pointer;" onclick="window.location='realizar_quiz.html?id=${q.id}'">
+                                <div class="fw-bold text-dark">${q.titulo}</div>
+                                <small class="text-muted">${q.descricao || 'Sem descrição'}</small>
+                            </div>
+                        </div>`;
+                    });
+                } else {
+                    html = '<div class="p-5 text-center text-muted border rounded bg-light">Nenhuma atividade publicada.</div>';
+                }
+
+                $('#lista-atividades').html(html);
+            })
+            .fail(function() {
+                $('#lista-atividades').html('<div class="p-5 text-center text-muted border rounded bg-light">Erro ao carregar atividades.</div>');
+            });
+    }
+
+    function carregarMembros() {
+        // Mostrar loading
+        $('#lista-membros').html('<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div> Carregando...</div>');
+
+        const id = new URLSearchParams(window.location.search).get('id');
+        const meuId = getUsuarioId();
+
+        $.get(API_URL, { acao: 'listar_membros', comunidade_id: id, usuario_id: meuId })
+            .done(function(res) {
+                let membros = (typeof res === 'string') ? JSON.parse(res) : res;
+
+                // Se a resposta for um objeto de erro, tratar
+                if(membros.status === 'erro') {
+                    $('#lista-membros').html('<div class="p-5 text-center text-muted border rounded bg-light">Erro: ' + membros.msg + '</div>');
+                    return;
+                }
+
+                let html = '';
+                if(Array.isArray(membros) && membros.length > 0) {
+                    membros.forEach(m => {
+                        const inicial = m.nome ? m.nome.charAt(0).toUpperCase() : '?';
+                        const ehEu = parseInt(m.id) === parseInt(meuId);
+                        const linkPerfil = ehEu ? 'perfil.php' : `perfil_publico.php?id=${m.id}`;
+
+                        // Avatar com foto ou inicial
+                        let avatarHtml = '';
+                        if(m.foto) {
+                            avatarHtml = `<img src="uploads/perfil/${m.foto}" alt="Foto" style="width: 100%; height: 100%; object-fit: cover;">`;
+                        } else {
+                            avatarHtml = inicial;
+                        }
+
+                        html += `
+                        <a href="${linkPerfil}" class="list-group-item list-group-item-action p-3 d-flex align-items-center text-decoration-none">
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; font-weight: bold; overflow: hidden;">
+                                ${avatarHtml}
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark">${m.nome} ${ehEu ? '<span class="badge bg-secondary ms-1">Voce</span>' : ''}</div>
+                                <small class="text-muted">${m.email || ''}</small>
+                            </div>
+                            <i class="bi bi-chevron-right ms-auto text-muted"></i>
+                        </a>`;
+                    });
+                } else {
+                    html = '<div class="p-5 text-center text-muted border rounded bg-light">Nenhum membro encontrado.</div>';
+                }
+
+                $('#lista-membros').html(html);
+            })
+            .fail(function(xhr) {
+                console.error('Erro ao carregar membros:', xhr);
+                $('#lista-membros').html('<div class="p-5 text-center text-muted border rounded bg-light">Erro ao carregar membros.</div>');
+            });
     }
 
     function excluirQuiz(e, id) {
         e.stopPropagation();
         if(confirm("Tem certeza que deseja apagar este quiz?")) {
-            $.post(API_URL, { acao: 'excluir_quiz', quiz_id: id }, function() {
+            $.post(API_URL, { acao: 'excluir_quiz', quiz_id: id, usuario_id: getUsuarioId() }, function() {
                 carregarDetalhes(new URLSearchParams(window.location.search).get('id'));
             });
         }

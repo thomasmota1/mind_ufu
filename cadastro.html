@@ -10,10 +10,11 @@
             margin: 0;
             font-family: "Segoe UI", sans-serif;
             background: linear-gradient(135deg, #1e40af, #3b82f6);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
 
         .card {
@@ -27,7 +28,8 @@
         }
 
         .logo {
-            font-size: 48px;
+            width: 120px;
+            height: auto;
             margin-bottom: 10px;
         }
 
@@ -37,14 +39,43 @@
             font-size: 26px;
         }
 
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
         input {
             width: 100%;
             padding: 14px;
-            margin-bottom: 15px;
             border-radius: 8px;
             border: 1px solid #d1d5db;
             font-size: 15px;
+            box-sizing: border-box;
+            transition: all 0.2s;
         }
+
+        input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        input.is-valid {
+            border-color: #10b981;
+        }
+
+        input.is-invalid {
+            border-color: #ef4444;
+        }
+
+        .feedback {
+            font-size: 12px;
+            margin-top: 5px;
+            min-height: 16px;
+        }
+
+        .feedback.text-danger { color: #ef4444; }
+        .feedback.text-success { color: #10b981; }
 
         button {
             width: 100%;
@@ -57,10 +88,18 @@
             border: none;
             border-radius: 10px;
             cursor: pointer;
+            transition: all 0.2s;
         }
 
         button:hover {
             background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background: #93c5fd;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .links {
@@ -73,33 +112,293 @@
             text-decoration: none;
         }
 
+        .links a:hover {
+            text-decoration: underline;
+        }
+
         .footer {
             margin-top: 25px;
             font-size: 12px;
             color: #6b7280;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-danger {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .password-strength {
+            height: 4px;
+            border-radius: 2px;
+            margin-top: 8px;
+            background: #e5e7eb;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s;
+        }
+
+        .strength-weak { background: #ef4444; width: 33%; }
+        .strength-medium { background: #f59e0b; width: 66%; }
+        .strength-strong { background: #10b981; width: 100%; }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 
 <body>
     <div class="card">
-        <div class="logo">🧠</div>
+        <img src="mindufu_logo_3_cut.png" alt="Mind UFU Logo" class="logo">
         <h1>Criar Conta</h1>
 
-        <form method="POST" action="php/criar_usuario.php">
-            <input type="text" name="nome" placeholder="Nickname" required>
-            <input type="email" name="email" placeholder="E-mail" required>
-            <input type="password" name="senha" placeholder="Senha" required>
-            <input type="password" name="confirmar_senha" placeholder="Confirmar senha" required>
+        <div id="alertBox"></div>
 
-            <button type="submit">Finalizar Cadastro</button>
+        <form id="cadastroForm">
+            <div class="form-group">
+                <input type="text" id="nome" placeholder="Seu nome" required minlength="3">
+                <div class="feedback" id="nomeFeedback"></div>
+            </div>
+
+            <div class="form-group">
+                <input type="email" id="email" placeholder="E-mail" required>
+                <div class="feedback" id="emailFeedback"></div>
+            </div>
+
+            <div class="form-group">
+                <input type="password" id="senha" placeholder="Senha (mínimo 6 caracteres)" required minlength="6">
+                <div class="password-strength">
+                    <div class="password-strength-bar" id="strengthBar"></div>
+                </div>
+                <div class="feedback" id="senhaFeedback"></div>
+            </div>
+
+            <div class="form-group">
+                <input type="password" id="confirmar_senha" placeholder="Confirmar senha" required>
+                <div class="feedback" id="confirmarFeedback"></div>
+            </div>
+
+            <button type="submit" id="btnCadastro">Finalizar Cadastro</button>
         </form>
 
         <div class="links">
-            <a href="index.html">← Voltar para o login</a>
+            <a href="index.html">Já tem conta? Fazer login</a>
         </div>
 
-        <div class="footer">Mind UFU · Cadastro</div>
+        <div class="footer">Mind UFU - Cadastro</div>
     </div>
+
+    <script>
+        let emailValido = false;
+        let emailTimer;
+
+        // Validar nome
+        document.getElementById('nome').addEventListener('input', function() {
+            const nome = this.value.trim();
+            const feedback = document.getElementById('nomeFeedback');
+
+            if (nome.length >= 3) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+                feedback.textContent = '';
+            } else if (nome.length > 0) {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+                feedback.textContent = 'Nome deve ter pelo menos 3 caracteres';
+                feedback.className = 'feedback text-danger';
+            }
+        });
+
+        // Validar email em tempo real
+        document.getElementById('email').addEventListener('input', function() {
+            const email = this.value.trim();
+            const feedback = document.getElementById('emailFeedback');
+            clearTimeout(emailTimer);
+
+            if (!email.includes('@')) {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+                feedback.textContent = 'Digite um e-mail válido';
+                feedback.className = 'feedback text-danger';
+                emailValido = false;
+                return;
+            }
+
+            feedback.textContent = 'Verificando...';
+            feedback.className = 'feedback';
+
+            emailTimer = setTimeout(async () => {
+                try {
+                    const response = await fetch(`php/api_usuario.php?acao=verificar_email&email=${encodeURIComponent(email)}`);
+                    const data = await response.json();
+
+                    if (data.status === 'existe') {
+                        this.classList.remove('is-valid');
+                        this.classList.add('is-invalid');
+                        feedback.textContent = 'Este e-mail já está cadastrado';
+                        feedback.className = 'feedback text-danger';
+                        emailValido = false;
+                    } else {
+                        this.classList.remove('is-invalid');
+                        this.classList.add('is-valid');
+                        feedback.textContent = 'E-mail disponível';
+                        feedback.className = 'feedback text-success';
+                        emailValido = true;
+                    }
+                } catch (error) {
+                    feedback.textContent = '';
+                    emailValido = true; // Permitir continuar em caso de erro de rede
+                }
+            }, 500);
+        });
+
+        // Validar força da senha
+        document.getElementById('senha').addEventListener('input', function() {
+            const senha = this.value;
+            const bar = document.getElementById('strengthBar');
+            const feedback = document.getElementById('senhaFeedback');
+
+            bar.className = 'password-strength-bar';
+
+            if (senha.length === 0) {
+                feedback.textContent = '';
+                return;
+            }
+
+            if (senha.length < 6) {
+                bar.classList.add('strength-weak');
+                feedback.textContent = 'Senha muito curta';
+                feedback.className = 'feedback text-danger';
+            } else if (senha.length < 8 || !/[A-Z]/.test(senha) || !/[0-9]/.test(senha)) {
+                bar.classList.add('strength-medium');
+                feedback.textContent = 'Senha média';
+                feedback.className = 'feedback';
+            } else {
+                bar.classList.add('strength-strong');
+                feedback.textContent = 'Senha forte';
+                feedback.className = 'feedback text-success';
+            }
+
+            // Verificar confirmação
+            const confirmar = document.getElementById('confirmar_senha').value;
+            if (confirmar) {
+                checkConfirmacao();
+            }
+        });
+
+        // Validar confirmação de senha
+        document.getElementById('confirmar_senha').addEventListener('input', checkConfirmacao);
+
+        function checkConfirmacao() {
+            const senha = document.getElementById('senha').value;
+            const confirmar = document.getElementById('confirmar_senha');
+            const feedback = document.getElementById('confirmarFeedback');
+
+            if (confirmar.value === senha && senha.length >= 6) {
+                confirmar.classList.remove('is-invalid');
+                confirmar.classList.add('is-valid');
+                feedback.textContent = 'Senhas conferem';
+                feedback.className = 'feedback text-success';
+            } else if (confirmar.value.length > 0) {
+                confirmar.classList.remove('is-valid');
+                confirmar.classList.add('is-invalid');
+                feedback.textContent = 'As senhas não conferem';
+                feedback.className = 'feedback text-danger';
+            }
+        }
+
+        // Submit do formulário
+        document.getElementById('cadastroForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const nome = document.getElementById('nome').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const senha = document.getElementById('senha').value;
+            const confirmar = document.getElementById('confirmar_senha').value;
+            const btn = document.getElementById('btnCadastro');
+
+            // Validações
+            if (nome.length < 3) {
+                showAlert('Nome deve ter pelo menos 3 caracteres');
+                return;
+            }
+
+            if (!emailValido) {
+                showAlert('E-mail inválido ou já cadastrado');
+                return;
+            }
+
+            if (senha.length < 6) {
+                showAlert('Senha deve ter pelo menos 6 caracteres');
+                return;
+            }
+
+            if (senha !== confirmar) {
+                showAlert('As senhas não conferem');
+                return;
+            }
+
+            // Loading
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span>Cadastrando...';
+
+            try {
+                const formData = new FormData();
+                formData.append('nome', nome);
+                formData.append('email', email);
+                formData.append('senha', senha);
+                formData.append('confirmar_senha', confirmar);
+
+                const response = await fetch('php/criar_usuario.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const text = await response.text();
+
+                // Se redirecionou ou deu sucesso
+                if (response.redirected || response.ok) {
+                    window.location.href = 'index.html?cadastro=sucesso';
+                } else {
+                    showAlert(text || 'Erro ao cadastrar');
+                    btn.disabled = false;
+                    btn.innerHTML = 'Finalizar Cadastro';
+                }
+            } catch (error) {
+                // Provavelmente redirecionou
+                window.location.href = 'index.html?cadastro=sucesso';
+            }
+        });
+
+        function showAlert(msg) {
+            document.getElementById('alertBox').innerHTML = `
+                <div class="alert alert-danger">${msg}</div>
+            `;
+        }
+    </script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 $host = 'localhost';
 $user = 'root';
 $pass = 'mysql'; 
-$db   = 'mindufu';
+$db   = 'mind_ufu';
 
 $conn = new mysqli($host, $user, $pass, $db);
 

@@ -18,51 +18,18 @@
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h2 class="fw-bold text-dark m-0">Olá, Estudante! </h2>
+                    <h2 class="fw-bold text-dark m-0" id="saudacao">Olá!</h2>
                     <p class="text-muted small">Aqui está o resumo do seu dia.</p>
                 </div>
-                <span class="badge bg-light text-dark border p-2">Semestre 2024/2</span>
             </div>
 
             <div class="row g-4 mb-4">
-                <div class="col-md-3">
+                <div class="col-md-6">
                     <div class="card h-100 border-0 shadow-sm p-3">
-                        <div class="d-flex align-items-center">
-                            <div class="rounded-circle bg-primary bg-opacity-10 p-3 text-primary me-3">
-                                <i class="bi bi-calendar-event fs-4"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0 text-muted small">Próxima Prova</h6>
-                                <h5 class="fw-bold mb-0">Cálculo I</h5>
-                                <small class="text-danger">Em 2 dias</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card h-100 border-0 shadow-sm p-3">
-                        <div class="d-flex align-items-center">
-                            <div class="rounded-circle bg-success bg-opacity-10 p-3 text-success me-3">
-                                <i class="bi bi-check-circle fs-4"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0 text-muted small">Quizzes Feitos</h6>
-                                <h5 class="fw-bold mb-0">12</h5>
-                                <small class="text-success">+2 essa semana</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card h-100 border-0 shadow-sm p-3">
-                        <div class="d-flex align-items-center">
-                            <div class="rounded-circle bg-warning bg-opacity-10 p-3 text-warning me-3">
-                                <i class="bi bi-card-heading fs-4"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0 text-muted small">Flashcards</h6>
-                                <h5 class="fw-bold mb-0">85</h5>
-                                <small class="text-muted">Cartões criados</small>
+                        <h6 class="text-muted small mb-3"><i class="bi bi-calendar-event me-2"></i>Próximos Eventos</h6>
+                        <div id="lista-eventos">
+                            <div class="text-center text-muted py-3">
+                                <div class="spinner-border spinner-border-sm" role="status"></div>
                             </div>
                         </div>
                     </div>
@@ -103,11 +70,85 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="assets/js/sidebar.js"></script>
+<script src="assets/js/sidebar.js?v=2"></script>
 <script>
+    // Obter dados do usuário logado
+    function getUsuario() {
+        return JSON.parse(localStorage.getItem('usuario') || '{}');
+    }
+
+    function getUsuarioId() {
+        return getUsuario().id || 0;
+    }
+
     $(document).ready(() => {
         if(typeof loadSidebar === 'function') loadSidebar();
+
+        // Verificar se está logado
+        if(!getUsuarioId()) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        // Saudação dinâmica com nome do usuário
+        const userData = getUsuario();
+        const nome = userData.nome || 'Estudante';
+        const primeiroNome = nome.split(' ')[0];
+        $('#saudacao').text(`Olá, ${primeiroNome}!`);
+
+        // Carregar próximos eventos
+        carregarEventos();
     });
+
+    function carregarEventos() {
+        const userId = getUsuarioId();
+
+        $.get('php/api_eventos.php', { acao: 'listar', usuario_id: userId })
+            .done(function(res) {
+                let eventos = (typeof res === 'string') ? JSON.parse(res) : res;
+
+                // Verificar se é um array válido
+                if(!Array.isArray(eventos)) {
+                    $('#lista-eventos').html('<p class="text-muted small text-center mb-0">Nenhum evento futuro.</p>');
+                    return;
+                }
+
+                // Filtrar apenas eventos futuros
+                const agora = new Date();
+                eventos = eventos.filter(e => new Date(e.data_inicio) >= agora);
+
+                // Ordenar por data e pegar os 3 primeiros
+                eventos.sort((a, b) => new Date(a.data_inicio) - new Date(b.data_inicio));
+                eventos = eventos.slice(0, 3);
+
+                let html = '';
+                if(eventos.length > 0) {
+                    eventos.forEach(e => {
+                        const data = new Date(e.data_inicio);
+                        const dataFormatada = data.toLocaleDateString('pt-BR', {
+                            day: '2-digit', month: 'short'
+                        });
+                        html += `
+                        <div class="d-flex align-items-center mb-2 p-2 rounded" style="background: ${e.cor}15;">
+                            <div class="rounded-circle p-2 me-3" style="background: ${e.cor}30;">
+                                <i class="bi bi-calendar-check" style="color: ${e.cor};"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold small text-dark">${e.titulo}</div>
+                                <small class="text-muted">${dataFormatada}</small>
+                            </div>
+                        </div>`;
+                    });
+                } else {
+                    html = '<p class="text-muted small text-center mb-0">Nenhum evento futuro.</p>';
+                }
+
+                $('#lista-eventos').html(html);
+            })
+            .fail(function() {
+                $('#lista-eventos').html('<p class="text-muted small text-center mb-0">Erro ao carregar eventos.</p>');
+            });
+    }
 </script>
 
 <style>

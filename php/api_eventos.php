@@ -7,10 +7,17 @@ if ($conn->connect_error) {
     die(json_encode(["erro" => "Erro conexão"]));
 }
 
-$usuario_id = 1;
-
-
+// Ler JSON do body primeiro
 $input = json_decode(file_get_contents("php://input"), true);
+
+// Obter usuario_id do request ou do JSON body
+$usuario_id = (int)($_REQUEST['usuario_id'] ?? $input['usuario_id'] ?? 0);
+
+// Se não tiver usuario_id válido, retornar erro
+if ($usuario_id <= 0) {
+    echo json_encode(["erro" => "Usuário não identificado"]);
+    exit;
+}
 
 $acao = $_REQUEST['acao'] ?? $input['acao'] ?? '';
 
@@ -36,18 +43,30 @@ break;
 
 case "listar":
 
-    $ano = $_GET['ano'];
-    $mes = $_GET['mes'];
+    $ano = $_GET['ano'] ?? null;
+    $mes = $_GET['mes'] ?? null;
 
-    $stmt = $conn->prepare("
-        SELECT * FROM eventos
-        WHERE usuario_id=?
-        AND YEAR(data_inicio)=?
-        AND MONTH(data_inicio)=?
-        ORDER BY data_inicio
-    ");
+    // Se ano e mes forem fornecidos, filtra por mês
+    if($ano && $mes) {
+        $stmt = $conn->prepare("
+            SELECT * FROM eventos
+            WHERE usuario_id=?
+            AND YEAR(data_inicio)=?
+            AND MONTH(data_inicio)=?
+            ORDER BY data_inicio
+        ");
+        $stmt->bind_param("iii",$usuario_id,$ano,$mes);
+    } else {
+        // Se não, lista todos os eventos futuros
+        $stmt = $conn->prepare("
+            SELECT * FROM eventos
+            WHERE usuario_id=?
+            AND data_inicio >= NOW()
+            ORDER BY data_inicio
+        ");
+        $stmt->bind_param("i",$usuario_id);
+    }
 
-    $stmt->bind_param("iii",$usuario_id,$ano,$mes);
     $stmt->execute();
 
     $res = $stmt->get_result();

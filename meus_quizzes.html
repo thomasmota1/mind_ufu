@@ -21,23 +21,39 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="assets/js/sidebar.js"></script>
+<script src="assets/js/sidebar.js?v=2"></script>
 
 <script>
-    const API_URL = 'http://localhost/mind_ufu/php/api_comunidades.php';
+    const API_URL = 'php/api_comunidades.php';
+
+    // Obter ID do usuário logado
+    function getUsuarioId() {
+        const userData = JSON.parse(localStorage.getItem('usuario') || '{}');
+        return userData.id || 0;
+    }
 
     $(document).ready(() => {
         if(typeof loadSidebar === 'function') loadSidebar();
+
+        // Verificar se está logado
+        if(!getUsuarioId()) {
+            window.location.href = 'index.html';
+            return;
+        }
+
         carregarSalvos();
     });
 
     function carregarSalvos() {
-        $.get(API_URL, { acao: 'listar_meus_quizzes' })
+        $.get(API_URL, { acao: 'listar_meus_quizzes', usuario_id: getUsuarioId() })
             .done(function(res) {
                 let data = (typeof res === 'string') ? JSON.parse(res) : res;
                 let html = '';
 
-                if(data.length === 0) {
+                // Verificar se é um array válido
+                if(!Array.isArray(data)) {
+                    html = '<div class="col-12 text-center text-muted mt-5"><h5>Você ainda não salvou nenhuma atividade.</h5><p>Vá até uma comunidade e clique em "Salvar".</p></div>';
+                } else if(data.length === 0) {
                     html = '<div class="col-12 text-center text-muted mt-5"><h5>Você ainda não salvou nenhuma atividade.</h5><p>Vá até uma comunidade e clique em "Salvar".</p></div>';
                 } else {
                     data.forEach(q => {
@@ -61,12 +77,16 @@
                 }
                 $('#lista-salvos').html(html);
                 $('#loading').hide();
+            })
+            .fail(function() {
+                $('#lista-salvos').html('<div class="col-12 text-center text-muted mt-5"><h5>Você ainda não salvou nenhuma atividade.</h5><p>Vá até uma comunidade e clique em "Salvar".</p></div>');
+                $('#loading').hide();
             });
     }
 
     function removerSalvo(id) {
         if(confirm("Remover da sua lista?")) {
-            $.post(API_URL, { acao: 'remover_salvo', quiz_id: id }, function() {
+            $.post(API_URL, { acao: 'remover_salvo', quiz_id: id, usuario_id: getUsuarioId() }, function() {
                 carregarSalvos();
             });
         }

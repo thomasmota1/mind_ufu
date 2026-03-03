@@ -62,7 +62,7 @@
                     <button class="btn btn-outline-secondary btn-sm" onclick="gerarPDF()" title="Baixar PDF">
                         <i class="bi bi-download"></i> PDF
                     </button>
-                    <button class="btn btn-outline-primary btn-sm" onclick="salvarQuizLista()" title="Salvar para depois">
+                    <button class="btn btn-outline-primary btn-sm" onclick="salvarQuizLista()" title="Salvar para depois" id="btn-salvar-quiz">
                         <i class="bi bi-bookmark-plus"></i> Salvar
                     </button>
                     <button class="btn btn-success btn-sm" onclick="finalizarProva()">
@@ -114,22 +114,35 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost/mind_ufu/php/api_comunidades.php'; 
-        
-        let quizData = {};     
-        let perguntas = [];    
-        let respostasUsuario = []; 
+        const API_URL = 'php/api_comunidades.php';
+
+        let quizData = {};
+        let perguntas = [];
+        let respostasUsuario = [];
         let questaoAtual = 0;
         let quizId = null;
+        let quizJaSalvo = false;
+
+        // Obter ID do usuário logado
+        function getUsuarioId() {
+            const userData = JSON.parse(localStorage.getItem('usuario') || '{}');
+            return userData.id || 0;
+        }
 
         $(document).ready(() => {
+            // Verificar se está logado
+            if(!getUsuarioId()) {
+                window.location.href = 'index.html';
+                return;
+            }
+
             quizId = new URLSearchParams(window.location.search).get('id');
             if(quizId) carregarQuiz(quizId);
-            else { alert("Quiz não encontrado."); window.location.href = 'comunidades.html'; }
+            else { alert("Quiz não encontrado."); window.location.href = 'comunidades.php'; }
         });
 
         function carregarQuiz(id) {
-            $.get(API_URL, { acao: 'get_quiz_full', quiz_id: id })
+            $.get(API_URL, { acao: 'get_quiz_full', quiz_id: id, usuario_id: getUsuarioId() })
                 .done(function(res) {
                     let data = (typeof res === 'string') ? JSON.parse(res) : res;
                     
@@ -140,6 +153,15 @@
 
                         $('#quiz-titulo').text(quizData.titulo);
                         $('#quiz-desc').text(quizData.descricao || "Simulado");
+
+                        // Controle do botão salvar baseado em permite_salvar_antes
+                        const permiteSalvar = quizData.permite_salvar_antes == 1 || quizData.permite_salvar_antes === null;
+                        if(!permiteSalvar) {
+                            $('#btn-salvar-quiz').hide();
+                        }
+
+                        // Verificar se já está salvo
+                        verificarSeSalvo();
 
                         if(perguntas.length === 0) {
                             $('#loading').html('<p>Sem perguntas.</p><button class="btn btn-secondary" onclick="sair()">Voltar</button>');
@@ -156,10 +178,33 @@
                 });
         }
 
+        function verificarSeSalvo() {
+            $.get(API_URL, { acao: 'listar_meus_quizzes', usuario_id: getUsuarioId() }, function(res) {
+                let lista = (typeof res === 'string') ? JSON.parse(res) : res;
+                if(Array.isArray(lista)) {
+                    const ids = lista.map(q => q.id);
+                    if(ids.includes(parseInt(quizId))) {
+                        quizJaSalvo = true;
+                        atualizarBotaoSalvo();
+                    }
+                }
+            });
+        }
+
+        function atualizarBotaoSalvo() {
+            const $btn = $('#btn-salvar-quiz');
+            $btn.removeClass('btn-outline-primary').addClass('btn-primary');
+            $btn.find('i').removeClass('bi-bookmark-plus').addClass('bi-bookmark-fill');
+            $btn.html('<i class="bi bi-bookmark-fill"></i> Salvo');
+        }
+
         function salvarQuizLista() {
-            $.post(API_URL, { acao: 'salvar_quiz_lista', quiz_id: quizId }, function(res) {
+            $.post(API_URL, { acao: 'salvar_quiz_lista', quiz_id: quizId, usuario_id: getUsuarioId() }, function(res) {
                 let data = (typeof res === 'string') ? JSON.parse(res) : res;
-                alert(data.msg); // Ex: "Salvo com sucesso!"
+
+                // Feedback visual no botão
+                quizJaSalvo = true;
+                atualizarBotaoSalvo();
             });
         }
 
@@ -334,7 +379,7 @@
 
         function sair() {
             if(document.referrer.includes('ver_comunidade')) history.back();
-            else window.location.href = 'comunidades.html';
+            else window.location.href = 'comunidades.php';
         }
     </script>
 </body>

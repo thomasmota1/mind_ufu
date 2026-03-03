@@ -115,7 +115,7 @@ while($deck = $decks->fetch_assoc()):
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="assets/js/sidebar.js"></script>
+<script src="assets/js/sidebar.js?v=2"></script>
 <script>
 $(document).ready(() => {
     if(typeof loadSidebar === 'function') loadSidebar();

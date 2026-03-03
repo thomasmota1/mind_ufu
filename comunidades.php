@@ -102,23 +102,36 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="assets/js/sidebar.js"></script>
+<script src="assets/js/sidebar.js?v=2"></script>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="assets/js/sidebar.js"></script>
+<script src="assets/js/sidebar.js?v=2"></script>
 
 <script>
     
-    const API_URL = 'php/api_comunidades.php'; 
+    const API_URL = 'php/api_comunidades.php';
+
+    // Obter dados do usuário logado
+    function getUsuarioId() {
+        const userData = JSON.parse(localStorage.getItem('usuario') || '{}');
+        return userData.id || 0;
+    }
 
     $(document).ready(() => {
         if(typeof loadSidebar === 'function') loadSidebar();
+
+        // Verificar se está logado
+        if(!getUsuarioId()) {
+            window.location.href = 'index.html';
+            return;
+        }
+
         listarComunidades();
     });
 
     function listarComunidades() {
-        $.get(API_URL, { acao: 'listar' })
+        $.get(API_URL, { acao: 'listar', usuario_id: getUsuarioId() })
             .done(function(data) {
                 try {
                     const lista = (typeof data === 'string') ? JSON.parse(data) : data;
@@ -164,8 +177,7 @@
         
         if(!nome) return alert("Digite um nome!");
 
-        // CORREÇÃO: Caminho unificado
-        $.post(API_URL, { acao: 'criar', nome: nome, cor: cor }, function(res) {
+        $.post(API_URL, { acao: 'criar', nome: nome, cor: cor, usuario_id: getUsuarioId() }, function(res) {
             let dados = res;
             if(typeof res === 'string') { try { dados = JSON.parse(res); } catch(e){} }
 
@@ -182,8 +194,7 @@
     function entrarComunidade() {
         const codigo = $('#codigoEntrada').val().toUpperCase();
         
-        // CORREÇÃO: Caminho unificado
-        $.post(API_URL, { acao: 'entrar', codigo: codigo }, function(res) {
+        $.post(API_URL, { acao: 'entrar', codigo: codigo, usuario_id: getUsuarioId() }, function(res) {
             let dados = res;
             if(typeof res === 'string') { try { dados = JSON.parse(res); } catch(e){} }
 

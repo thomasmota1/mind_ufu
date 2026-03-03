@@ -55,7 +55,7 @@
                 <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" alt="Vazio" style="width: 100px; opacity: 0.5;">
                 <h5 class="mt-3 text-muted">Nenhum quiz salvo ainda.</h5>
                 <p class="text-muted small">Vá até uma comunidade e clique em "Salvar" nas atividades.</p>
-                <a href="comunidades.html" class="btn btn-outline-primary mt-2">Ir para Comunidades</a>
+                <a href="comunidades.php" class="btn btn-outline-primary mt-2">Ir para Comunidades</a>
             </div>
 
         </div>
@@ -64,26 +64,38 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="assets/js/sidebar.js"></script>
+<script src="assets/js/sidebar.js?v=2"></script>
 
 <script>
-    const API_URL = 'http://localhost/mind_ufu/php/api_comunidades.php';
+    const API_URL = 'php/api_comunidades.php';
+
+    // Obter ID do usuário logado
+    function getUsuarioId() {
+        const userData = JSON.parse(localStorage.getItem('usuario') || '{}');
+        return userData.id || 0;
+    }
 
     $(document).ready(() => {
         if(typeof loadSidebar === 'function') loadSidebar();
-        
+
+        // Verificar se está logado
+        if(!getUsuarioId()) {
+            window.location.href = 'index.html';
+            return;
+        }
+
         carregarSalvos();
     });
 
     function carregarSalvos() {
-        $.get(API_URL, { acao: 'listar_meus_quizzes' })
+        $.get(API_URL, { acao: 'listar_meus_quizzes', usuario_id: getUsuarioId() })
             .done(function(res) {
                 // Converte para JSON se necessário
                 let data = (typeof res === 'string') ? JSON.parse(res) : res;
                 let html = '';
 
-                // Se a lista estiver vazia
-                if(data.length === 0) {
+                // Se não for array ou estiver vazia
+                if(!Array.isArray(data) || data.length === 0) {
                     $('#loading').hide();
                     $('#empty-state').removeClass('d-none');
                     $('#lista-salvos').html('');
@@ -138,7 +150,7 @@
 
     function removerSalvo(id) {
         if(confirm("Tem certeza que deseja remover este quiz dos seus salvos?")) {
-            $.post(API_URL, { acao: 'remover_salvo', quiz_id: id }, function(res) {
+            $.post(API_URL, { acao: 'remover_salvo', quiz_id: id, usuario_id: getUsuarioId() }, function(res) {
                 carregarSalvos();
             });
         }

@@ -5,11 +5,9 @@ $deck_nome = $_POST['deck_nome'];
 $perguntas = $_POST['pergunta'];
 $respostas = $_POST['resposta'];
 
-/* Criar deck */
 $conn->query("INSERT INTO decks (nome) VALUES ('$deck_nome')");
 $deck_id = $conn->insert_id;
 
-/* Inserir todos flashcards */
 for($i = 0; $i < count($perguntas); $i++) {
 
     $pergunta = $perguntas[$i];
