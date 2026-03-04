@@ -242,10 +242,12 @@
                 const selecionada = respostasUsuario[index] == alt.id ? 'selecionada' : '';
                 const checked = respostasUsuario[index] == alt.id ? 'checked' : '';
 
+                const safeText = $('<div>').text(alt.texto).html();
+
                 const html = `
                 <label class="alternativa ${selecionada}" onclick="selecionarAlternativa(${index}, ${alt.id}, this)">
                     <input type="radio" name="q_${index}" ${checked}>
-                    <span>${alt.texto}</span>
+                    <span>${safeText}</span>
                 </label>`;
                 lista.append(html);
             });
