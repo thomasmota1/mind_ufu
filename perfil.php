@@ -237,10 +237,39 @@
                     </div>
                 </form>
 
+                <div class="text-center mt-4">
+                    <a href="#" class="text-muted small" data-bs-toggle="modal" data-bs-target="#modalExcluirConta">
+                        Excluir minha conta
+                    </a>
+                </div>
+
             </div>
 
         </div>
     </main>
+</div>
+
+<!-- Modal Excluir Conta -->
+<div class="modal fade" id="modalExcluirConta" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Excluir conta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Tem certeza? Esta acao e irreversivel e todos os seus dados serao apagados.</p>
+                <div class="mb-3">
+                    <label class="form-label">Confirme sua senha</label>
+                    <input type="password" class="form-control" id="senhaConfirmacao" placeholder="Sua senha">
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="excluirConta()">Excluir</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -427,6 +456,36 @@ function logout() {
         localStorage.removeItem('usuario');
         window.location.href = 'index.html';
     }
+}
+
+function excluirConta() {
+    const senha = $('#senhaConfirmacao').val();
+
+    if (!senha) {
+        alert('Digite sua senha para confirmar');
+        return;
+    }
+
+    $.post(API_URL, {
+        acao: 'excluir_conta',
+        id: usuarioId,
+        senha: senha
+    }, function(res) {
+        const data = typeof res === 'string' ? JSON.parse(res) : res;
+
+        if (data.status === 'sucesso') {
+            // Fechar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalExcluirConta'));
+            if (modal) modal.hide();
+            $('.modal-backdrop').remove();
+
+            alert('Sua conta foi excluida. Ate mais!');
+            localStorage.removeItem('usuario');
+            window.location.href = 'index.html';
+        } else {
+            alert(data.msg || 'Erro ao excluir conta');
+        }
+    });
 }
 </script>
 

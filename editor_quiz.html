@@ -64,36 +64,15 @@
                 <textarea id="textoPergunta" class="form-control bg-light" rows="2" placeholder="Digite o enunciado da questão aqui..."></textarea>
             </div>
 
-            <label class="form-label fw-bold small text-muted mb-2">Alternativas (Selecione a correta)</label>
-            
-            <div class="vstack gap-2">
-                <div class="input-group">
-                    <div class="input-group-text bg-white border-end-0">
-                        <input class="form-check-input mt-0" type="radio" name="correta" value="0" checked>
-                    </div>
-                    <input type="text" class="form-control opcao-input border-start-0" placeholder="Alternativa A">
-                </div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="form-label fw-bold small text-muted m-0">Alternativas (Selecione a correta)</label>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="adicionarAlternativa()">
+                    <i class="bi bi-plus"></i> Adicionar
+                </button>
+            </div>
 
-                <div class="input-group">
-                    <div class="input-group-text bg-white border-end-0">
-                        <input class="form-check-input mt-0" type="radio" name="correta" value="1">
-                    </div>
-                    <input type="text" class="form-control opcao-input border-start-0" placeholder="Alternativa B">
-                </div>
-
-                <div class="input-group">
-                    <div class="input-group-text bg-white border-end-0">
-                        <input class="form-check-input mt-0" type="radio" name="correta" value="2">
-                    </div>
-                    <input type="text" class="form-control opcao-input border-start-0" placeholder="Alternativa C">
-                </div>
-
-                <div class="input-group">
-                    <div class="input-group-text bg-white border-end-0">
-                        <input class="form-check-input mt-0" type="radio" name="correta" value="3">
-                    </div>
-                    <input type="text" class="form-control opcao-input border-start-0" placeholder="Alternativa D">
-                </div>
+            <div id="container-alternativas" class="vstack gap-2">
+                <!-- Alternativas dinamicas -->
             </div>
 
             <button class="btn btn-dark w-100 mt-3 fw-bold" onclick="salvarPergunta()">
@@ -111,7 +90,75 @@
         </div>
 </div>
 
+<!-- Toast -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toastNotif" class="toast align-items-center border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="toastMsg"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmar Publicar -->
+<div class="modal fade" id="modalPublicar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Publicar quiz</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-0">O quiz ficara visivel para todos os membros da comunidade.</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="confirmarPublicar()">Publicar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmar Excluir Quiz -->
+<div class="modal fade" id="modalExcluirQuiz" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Excluir quiz</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-0">Isso apagara o quiz e todas as perguntas permanentemente.</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmarExcluirQuiz()">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmar Excluir Pergunta -->
+<div class="modal fade" id="modalExcluirPergunta" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Excluir pergunta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-0">Tem certeza que deseja apagar esta pergunta?</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmarExcluirPergunta()">Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     const idQuiz = new URLSearchParams(window.location.search).get('id');
 
@@ -128,9 +175,70 @@
             return;
         }
 
-        if(!idQuiz) { alert("Erro: ID faltando"); window.history.back(); }
+        if(!idQuiz) { window.history.back(); return; }
+
+        // Inicializar com 2 alternativas
+        adicionarAlternativa();
+        adicionarAlternativa();
+
         carregarDadosIniciais();
     });
+
+    function getLetraAlternativa(index) {
+        return String.fromCharCode(65 + index); // A, B, C, D...
+    }
+
+    function adicionarAlternativa() {
+        const container = $('#container-alternativas');
+        const index = container.children().length;
+        const letra = getLetraAlternativa(index);
+        const checked = index === 0 ? 'checked' : '';
+
+        const html = `
+            <div class="input-group alternativa-item">
+                <div class="input-group-text bg-white border-end-0">
+                    <input class="form-check-input mt-0" type="radio" name="correta" value="${index}" ${checked}>
+                </div>
+                <input type="text" class="form-control opcao-input border-start-0" placeholder="Alternativa ${letra}">
+                <button type="button" class="btn btn-outline-danger border-start-0" onclick="removerAlternativa(this)" title="Remover">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>`;
+
+        container.append(html);
+        atualizarBotoesRemover();
+    }
+
+    function removerAlternativa(btn) {
+        const container = $('#container-alternativas');
+        if(container.children().length <= 2) {
+            mostrarToast("Minimo de 2 alternativas!", "warning");
+            return;
+        }
+
+        $(btn).closest('.alternativa-item').remove();
+        reindexarAlternativas();
+        atualizarBotoesRemover();
+    }
+
+    function reindexarAlternativas() {
+        $('#container-alternativas .alternativa-item').each(function(index) {
+            const letra = getLetraAlternativa(index);
+            $(this).find('input[type="radio"]').val(index);
+            $(this).find('.opcao-input').attr('placeholder', 'Alternativa ' + letra);
+        });
+
+        // Garantir que pelo menos um radio esteja selecionado
+        if($('input[name="correta"]:checked').length === 0) {
+            $('input[name="correta"]').first().prop('checked', true);
+        }
+    }
+
+    function atualizarBotoesRemover() {
+        const total = $('#container-alternativas').children().length;
+        // Desabilitar botões de remover se tiver apenas 2
+        $('#container-alternativas .btn-outline-danger').prop('disabled', total <= 2);
+    }
 
     function carregarDadosIniciais() {
         $.get('php/api_comunidades.php', { acao: 'get_quiz_full', quiz_id: idQuiz, usuario_id: getUsuarioId() }, function(res){
@@ -166,6 +274,13 @@
         });
     }
 
+    function mostrarToast(msg, tipo = "success") {
+        const toast = document.getElementById('toastNotif');
+        toast.className = 'toast align-items-center border-0 text-bg-' + tipo;
+        document.getElementById('toastMsg').textContent = msg;
+        new bootstrap.Toast(toast).show();
+    }
+
     function salvarDetalhes() {
         $.post('php/api_comunidades.php', {
             acao: 'editar_quiz_info',
@@ -174,7 +289,7 @@
             descricao: $('#editDesc').val(),
             permite_salvar_antes: $('#editPermiteSalvar').is(':checked') ? 1 : 0,
             usuario_id: getUsuarioId()
-        }, () => alert("Informações atualizadas com sucesso!"));
+        }, () => mostrarToast("Informacoes atualizadas!"));
     }
 
     function salvarPergunta() {
@@ -183,8 +298,14 @@
         $('.opcao-input').each(function() { opcoes.push($(this).val()); });
         const corretaIndex = $('input[name="correta"]:checked').val();
 
-        if(!enunciado || opcoes.some(o => o.trim() === "")) {
-            return alert("Preencha o enunciado e todas as opções!");
+        if(!enunciado.trim()) {
+            mostrarToast("Preencha o enunciado!", "warning");
+            return;
+        }
+
+        if(opcoes.some(o => o.trim() === "")) {
+            mostrarToast("Preencha todas as alternativas!", "warning");
+            return;
         }
 
         $.post('php/api_comunidades.php', {
@@ -197,39 +318,57 @@
         }, function(res) {
             let data = typeof res === 'string' ? JSON.parse(res) : res;
             if(data.status === 'sucesso') {
+                // Limpar campos
                 $('#textoPergunta').val('');
-                $('.opcao-input').val('');
-                $('input[name="correta"][value="0"]').prop('checked', true);
+                // Resetar para 2 alternativas vazias
+                $('#container-alternativas').empty();
+                adicionarAlternativa();
+                adicionarAlternativa();
                 // Atualiza lista
                 carregarDadosIniciais();
                 $('html, body').animate({ scrollTop: $(document).height() }, 'slow');
             } else {
-                alert("Erro: " + data.msg);
+                mostrarToast("Erro: " + data.msg, "danger");
             }
         });
     }
 
+    let perguntaParaExcluir = null;
+
     function excluirPergunta(pid) {
-        if(confirm("Apagar esta pergunta?")) {
-            $.post('php/api_comunidades.php', { acao: 'excluir_pergunta', pergunta_id: pid, usuario_id: getUsuarioId() }, () => carregarDadosIniciais());
+        perguntaParaExcluir = pid;
+        new bootstrap.Modal(document.getElementById('modalExcluirPergunta')).show();
+    }
+
+    function confirmarExcluirPergunta() {
+        if(perguntaParaExcluir) {
+            $.post('php/api_comunidades.php', { acao: 'excluir_pergunta', pergunta_id: perguntaParaExcluir, usuario_id: getUsuarioId() }, () => {
+                bootstrap.Modal.getInstance(document.getElementById('modalExcluirPergunta')).hide();
+                carregarDadosIniciais();
+            });
         }
     }
 
     function deletarQuizInteiro() {
-        if(confirm("⚠️ PERIGO: Isso apagará o quiz e TODAS as perguntas permanentemente. Continuar?")) {
-            $.post('php/api_comunidades.php', { acao: 'excluir_quiz', quiz_id: idQuiz, usuario_id: getUsuarioId() }, function(){
-                window.location.href = document.referrer; // Volta pra tela anterior
-            });
-        }
+        new bootstrap.Modal(document.getElementById('modalExcluirQuiz')).show();
+    }
+
+    function confirmarExcluirQuiz() {
+        $.post('php/api_comunidades.php', { acao: 'excluir_quiz', quiz_id: idQuiz, usuario_id: getUsuarioId() }, function(){
+            window.location.href = document.referrer;
+        });
     }
 
     function publicarQuiz() {
-        if(confirm("Tem certeza? Ao publicar, o quiz ficará visível para todos os alunos da comunidade.")) {
-            $.post('php/api_comunidades.php', { acao: 'publicar_quiz', quiz_id: idQuiz, usuario_id: getUsuarioId() }, function(){
-                alert("✅ Quiz Publicado com Sucesso!");
-                window.location.href = document.referrer;
-            });
-        }
+        new bootstrap.Modal(document.getElementById('modalPublicar')).show();
+    }
+
+    function confirmarPublicar() {
+        $.post('php/api_comunidades.php', { acao: 'publicar_quiz', quiz_id: idQuiz, usuario_id: getUsuarioId() }, function(){
+            bootstrap.Modal.getInstance(document.getElementById('modalPublicar')).hide();
+            mostrarToast("Quiz publicado com sucesso!");
+            setTimeout(() => window.location.href = document.referrer, 1000);
+        });
     }
 </script>
 

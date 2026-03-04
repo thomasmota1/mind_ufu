@@ -104,10 +104,6 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="assets/js/sidebar.js?v=2"></script>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="assets/js/sidebar.js?v=2"></script>
-
 <script>
     
     const API_URL = 'php/api_comunidades.php';
@@ -119,6 +115,10 @@
     }
 
     $(document).ready(() => {
+        // Limpar qualquer backdrop de modal que possa ter ficado
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open').css('overflow', '');
+
         if(typeof loadSidebar === 'function') loadSidebar();
 
         // Verificar se está logado
@@ -174,7 +174,7 @@
     function criarComunidade() {
         const nome = $('#novoNome').val();
         const cor = $('#novoCor').val();
-        
+
         if(!nome) return alert("Digite um nome!");
 
         $.post(API_URL, { acao: 'criar', nome: nome, cor: cor, usuario_id: getUsuarioId() }, function(res) {
@@ -182,9 +182,19 @@
             if(typeof res === 'string') { try { dados = JSON.parse(res); } catch(e){} }
 
             if(dados.status === 'sucesso') {
-                alert(`Comunidade criada! Código: ${dados.codigo}`);
-                bootstrap.Modal.getInstance(document.getElementById('modalCriar')).hide();
+                // Fechar modal corretamente
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalCriar'));
+                if(modal) modal.hide();
+
+                // Remover backdrop manualmente se necessário
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open').css('overflow', '');
+
+                // Limpar campo e recarregar lista
+                $('#novoNome').val('');
                 listarComunidades();
+
+                alert(`Comunidade criada! Código: ${dados.codigo}`);
             } else {
                 alert("Erro: " + (dados.msg || "Desconhecido"));
             }
@@ -193,13 +203,23 @@
 
     function entrarComunidade() {
         const codigo = $('#codigoEntrada').val().toUpperCase();
-        
+
         $.post(API_URL, { acao: 'entrar', codigo: codigo, usuario_id: getUsuarioId() }, function(res) {
             let dados = res;
             if(typeof res === 'string') { try { dados = JSON.parse(res); } catch(e){} }
 
             if(dados.status === 'sucesso') {
-                bootstrap.Modal.getInstance(document.getElementById('modalEntrar')).hide();
+                // Fechar modal corretamente
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalEntrar'));
+                if(modal) modal.hide();
+
+                // Remover backdrop manualmente se necessário
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open').css('overflow', '');
+
+                // Limpar campos
+                $('#codigoEntrada').val('');
+                $('#msgErro').text('');
                 listarComunidades();
             } else {
                 $('#msgErro').text(dados.msg || "Erro ao entrar");

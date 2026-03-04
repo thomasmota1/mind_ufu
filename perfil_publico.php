@@ -118,6 +118,14 @@
                     <p class="member-since" id="member-since"></p>
 
                 </div>
+
+                <!-- Decks Publicos -->
+                <div id="decks-section" class="mt-4 d-none">
+                    <h5 class="fw-bold text-dark mb-3">
+                        <i class="bi bi-collection text-primary me-2"></i>Decks Publicos
+                    </h5>
+                    <div id="lista-decks" class="row g-3"></div>
+                </div>
             </div>
 
             <div id="error-state" class="text-center py-5 d-none">
@@ -138,6 +146,10 @@
 const API_URL = 'php/api_usuario.php';
 
 $(document).ready(() => {
+    // Limpar qualquer backdrop de modal que possa ter ficado
+    $('.modal-backdrop').remove();
+    $('body').removeClass('modal-open').css('overflow', '');
+
     if (typeof loadSidebar === 'function') loadSidebar();
 
     // Verificar se está logado
@@ -224,11 +236,40 @@ function carregarPerfil(userId) {
 
             $('#loading').addClass('d-none');
             $('#perfil-content').removeClass('d-none');
+
+            // Carregar decks publicos
+            carregarDecksPublicos(userId);
         } else {
             mostrarErro();
         }
     }).fail(function() {
         mostrarErro();
+    });
+}
+
+function carregarDecksPublicos(userId) {
+    $.get('php/api_flashcards.php', { acao: 'listar_decks_usuario', usuario_id: userId }, function(res) {
+        const decks = typeof res === 'string' ? JSON.parse(res) : res;
+
+        if (decks.length > 0) {
+            let html = '';
+            decks.forEach(deck => {
+                html += `
+                <div class="col-md-6">
+                    <a href="estudar_deck.php?id=${deck.id}" class="text-decoration-none">
+                        <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-dark mb-1">${deck.nome}</h6>
+                                <p class="text-muted small mb-2">${deck.descricao || 'Sem descricao'}</p>
+                                <span class="badge bg-primary">${deck.total_cards} cards</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>`;
+            });
+            $('#lista-decks').html(html);
+            $('#decks-section').removeClass('d-none');
+        }
     });
 }
 

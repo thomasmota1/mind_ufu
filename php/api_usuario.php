@@ -257,6 +257,54 @@ elseif ($acao == 'upload_foto') {
 }
 
 // =========================
+// EXCLUIR CONTA
+// =========================
+elseif ($acao == 'excluir_conta') {
+
+    $usuario_id = (int)($_POST['id'] ?? 0);
+    $senha = $_POST['senha'] ?? '';
+
+    if ($usuario_id <= 0 || empty($senha)) {
+        echo json_encode(["status" => "erro", "msg" => "Dados incompletos"]);
+        exit;
+    }
+
+    // Verificar senha
+    $stmt = $conn->prepare("SELECT senha, foto FROM usuarios WHERE id = ?");
+    $stmt->bind_param("i", $usuario_id);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+
+    if (!$row) {
+        echo json_encode(["status" => "erro", "msg" => "Usuário não encontrado"]);
+        exit;
+    }
+
+    if (!password_verify($senha, $row['senha'])) {
+        echo json_encode(["status" => "erro", "msg" => "Senha incorreta"]);
+        exit;
+    }
+
+    // Remover foto de perfil se existir
+    if ($row['foto']) {
+        $fotoPath = '../uploads/perfil/' . $row['foto'];
+        if (file_exists($fotoPath)) {
+            unlink($fotoPath);
+        }
+    }
+
+    // Excluir usuário (CASCADE vai apagar dados relacionados)
+    $stmt = $conn->prepare("DELETE FROM usuarios WHERE id = ?");
+    $stmt->bind_param("i", $usuario_id);
+
+    if ($stmt->execute()) {
+        echo json_encode(["status" => "sucesso", "msg" => "Conta excluída com sucesso"]);
+    } else {
+        echo json_encode(["status" => "erro", "msg" => "Erro ao excluir conta"]);
+    }
+}
+
+// =========================
 // AÇÃO INVÁLIDA
 // =========================
 else {

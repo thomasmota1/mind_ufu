@@ -123,14 +123,13 @@
         let quizId = null;
         let quizJaSalvo = false;
 
-        // Obter ID do usuário logado
+        
         function getUsuarioId() {
             const userData = JSON.parse(localStorage.getItem('usuario') || '{}');
             return userData.id || 0;
         }
 
         $(document).ready(() => {
-            // Verificar se está logado
             if(!getUsuarioId()) {
                 window.location.href = 'index.html';
                 return;
@@ -154,13 +153,11 @@
                         $('#quiz-titulo').text(quizData.titulo);
                         $('#quiz-desc').text(quizData.descricao || "Simulado");
 
-                        // Controle do botão salvar baseado em permite_salvar_antes
                         const permiteSalvar = quizData.permite_salvar_antes == 1 || quizData.permite_salvar_antes === null;
                         if(!permiteSalvar) {
                             $('#btn-salvar-quiz').hide();
                         }
 
-                        // Verificar se já está salvo
                         verificarSeSalvo();
 
                         if(perguntas.length === 0) {
@@ -202,7 +199,6 @@
             $.post(API_URL, { acao: 'salvar_quiz_lista', quiz_id: quizId, usuario_id: getUsuarioId() }, function(res) {
                 let data = (typeof res === 'string') ? JSON.parse(res) : res;
 
-                // Feedback visual no botão
                 quizJaSalvo = true;
                 atualizarBotaoSalvo();
             });
@@ -226,7 +222,6 @@
             
             $('#btn-ant').prop('disabled', index === 0);
             
-            // Botão final muda na última questão
             if(index === perguntas.length - 1) {
                 $('#btn-prox').html('Revisar e Finalizar <i class="bi bi-check2-circle"></i>');
                 $('#btn-prox').removeClass('btn-primary').addClass('btn-success');
@@ -316,6 +311,10 @@
         }
 
         function gerarPDF() {
+            if (!window.jspdf) {
+                alert('Erro ao carregar biblioteca de PDF. Tente recarregar a página.');
+                return;
+            }
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             doc.setFont("helvetica");
@@ -374,7 +373,8 @@
                 yGab += 7;
             });
 
-            doc.save(`Quiz_${quizData.titulo}.pdf`);
+            const nomeArquivo = quizData.titulo.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
+            doc.save(`Quiz_${nomeArquivo}.pdf`);
         }
 
         function sair() {

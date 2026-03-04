@@ -25,7 +25,8 @@ CREATE TABLE usuarios (
 CREATE TABLE disciplinas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
-    usuario_id INT DEFAULT NULL
+    usuario_id INT DEFAULT NULL,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
 CREATE TABLE pastas (
@@ -74,7 +75,7 @@ CREATE TABLE questionarios (
     permite_salvar_antes BOOLEAN DEFAULT TRUE,
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (comunidade_id) REFERENCES comunidades(id) ON DELETE CASCADE,
-    FOREIGN KEY (criador_id) REFERENCES usuarios(id)
+    FOREIGN KEY (criador_id) REFERENCES usuarios(id) ON DELETE SET NULL
 );
 
 CREATE TABLE perguntas (
@@ -119,8 +120,12 @@ CREATE TABLE eventos (
 CREATE TABLE IF NOT EXISTS decks (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
+    descricao TEXT DEFAULT NULL,
     usuario_id INT DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    publico BOOLEAN DEFAULT FALSE,
+    cor VARCHAR(7) DEFAULT '#4f46e5',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS flashcards (
