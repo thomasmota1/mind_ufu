@@ -285,15 +285,20 @@
                 const acertou = respId == altCorretaObj.id;
                 if(acertou) acertos++;
 
-                let statusHtml = acertou 
-                    ? `<span class="badge-res badge-certo">Correto</span>` 
+                // Escapar textos para evitar interpretação de HTML
+                const safeEnunciado = $('<div>').text(p.enunciado).html();
+                const safeCorreta = $('<div>').text(altCorretaObj.texto).html();
+                const safeUsuario = altUsuarioObj ? $('<div>').text(altUsuarioObj.texto).html() : 'Em branco';
+
+                let statusHtml = acertou
+                    ? `<span class="badge-res badge-certo">Correto</span>`
                     : `<span class="badge-res badge-errado">Errado</span>`;
-                
-                let feedbackHtml = acertou 
-                    ? `<div class="mt-2 text-muted small">Resposta: <b class="text-success">${altCorretaObj.texto}</b></div>`
+
+                let feedbackHtml = acertou
+                    ? `<div class="mt-2 text-muted small">Resposta: <b class="text-success">${safeCorreta}</b></div>`
                     : `<div class="mt-2 text-muted small">
-                        <div>Sua resposta: <b class="text-danger">${altUsuarioObj ? altUsuarioObj.texto : 'Em branco'}</b></div>
-                        <div>Gabarito: <b class="text-success">${altCorretaObj.texto}</b></div>
+                        <div>Sua resposta: <b class="text-danger">${safeUsuario}</b></div>
+                        <div>Gabarito: <b class="text-success">${safeCorreta}</b></div>
                        </div>`;
 
                 containerRes.append(`
@@ -302,7 +307,7 @@
                         <strong>Questão ${index + 1}</strong>
                         ${statusHtml}
                     </div>
-                    <p class="mb-1 mt-1">${p.enunciado}</p>
+                    <p class="mb-1 mt-1">${safeEnunciado}</p>
                     ${feedbackHtml}
                 </div>`);
             });
