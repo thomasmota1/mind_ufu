@@ -100,13 +100,30 @@
     </div>
 </div>
 
+<!-- Toast -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toastNotif" class="toast align-items-center border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="toastMsg"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="assets/js/sidebar.js?v=2"></script>
 
 <script>
-    
+
     const API_URL = 'php/api_comunidades.php';
+
+    function mostrarToast(msg, tipo = "success") {
+        const toast = document.getElementById('toastNotif');
+        toast.className = 'toast align-items-center border-0 text-bg-' + tipo;
+        document.getElementById('toastMsg').textContent = msg;
+        new bootstrap.Toast(toast).show();
+    }
 
     // Obter dados do usuário logado
     function getUsuarioId() {
@@ -175,7 +192,7 @@
         const nome = $('#novoNome').val();
         const cor = $('#novoCor').val();
 
-        if(!nome) return alert("Digite um nome!");
+        if(!nome) { mostrarToast("Digite um nome!", "warning"); return; }
 
         $.post(API_URL, { acao: 'criar', nome: nome, cor: cor, usuario_id: getUsuarioId() }, function(res) {
             let dados = res;
@@ -194,9 +211,9 @@
                 $('#novoNome').val('');
                 listarComunidades();
 
-                alert(`Comunidade criada! Código: ${dados.codigo}`);
+                mostrarToast("Comunidade criada! Codigo: " + dados.codigo);
             } else {
-                alert("Erro: " + (dados.msg || "Desconhecido"));
+                mostrarToast("Erro: " + (dados.msg || "Desconhecido"), "danger");
             }
         });
     }

@@ -158,16 +158,20 @@
     </div>
 
     <script>
-        
+        // Verificar se veio do cadastro
         const params = new URLSearchParams(window.location.search);
-        if (params.get('cadastro') === 'sucesso') {
-            showAlert('success', 'Cadastro realizado com sucesso! Faça login.');
-        }
+        const veioDosCadastro = params.get('cadastro') === 'sucesso';
 
-        
-        const userData = localStorage.getItem('usuario');
-        if (userData) {
-            window.location.href = 'dashboard.php';
+        if (veioDosCadastro) {
+            // Limpar localStorage para permitir novo login
+            localStorage.removeItem('usuario');
+            showAlert('success', 'Cadastro realizado com sucesso! Faca login.');
+        } else {
+            // Se ja esta logado, redirecionar para dashboard
+            const userData = localStorage.getItem('usuario');
+            if (userData) {
+                window.location.href = 'dashboard.php';
+            }
         }
 
         document.getElementById('loginForm').addEventListener('submit', async function(e) {

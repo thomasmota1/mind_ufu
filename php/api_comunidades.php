@@ -86,7 +86,8 @@ elseif ($acao == 'detalhes') {
             "status" => "sucesso",
             "dados" => $comunidade,
             "quiz" => $questionarios,
-            "user_id" => $usuario_id
+            "user_id" => $usuario_id,
+            "is_criador" => ($comunidade['criador_id'] == $usuario_id)
         ]);
     } else {
         echo json_encode(["status" => "erro", "msg" => "Comunidade não encontrada"]);
@@ -103,8 +104,8 @@ elseif ($acao == 'criar') {
     $cor = $_POST['cor'] ?? '#0d6efd';
     $codigo = strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
 
-    $sql = "INSERT INTO comunidades (nome, codigo, cor)
-            VALUES ('$nome', '$codigo', '$cor')";
+    $sql = "INSERT INTO comunidades (nome, codigo, cor, criador_id)
+            VALUES ('$nome', '$codigo', '$cor', $usuario_id)";
 
     if ($conn->query($sql)) {
 
@@ -117,6 +118,42 @@ elseif ($acao == 'criar') {
 
     } else {
         echo json_encode(["status" => "erro", "msg" => $conn->error]);
+    }
+}
+
+
+// =========================
+// EXCLUIR COMUNIDADE
+// =========================
+elseif ($acao == 'excluir_comunidade') {
+
+    $comunidade_id = (int)($_POST['comunidade_id'] ?? 0);
+
+    // Verificar se o usuario e o criador
+    $stmt = $conn->prepare("SELECT criador_id FROM comunidades WHERE id = ?");
+    $stmt->bind_param("i", $comunidade_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $comunidade = $result->fetch_assoc();
+
+    if (!$comunidade) {
+        echo json_encode(["status" => "erro", "msg" => "Comunidade nao encontrada"]);
+        exit;
+    }
+
+    if ($comunidade['criador_id'] != $usuario_id) {
+        echo json_encode(["status" => "erro", "msg" => "Apenas o criador pode excluir a comunidade"]);
+        exit;
+    }
+
+    // Excluir comunidade (CASCADE vai remover membros, questionarios, etc)
+    $stmt = $conn->prepare("DELETE FROM comunidades WHERE id = ?");
+    $stmt->bind_param("i", $comunidade_id);
+
+    if ($stmt->execute()) {
+        echo json_encode(["status" => "sucesso"]);
+    } else {
+        echo json_encode(["status" => "erro", "msg" => "Erro ao excluir"]);
     }
 }
 
