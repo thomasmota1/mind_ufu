@@ -83,14 +83,25 @@ case "editar":
 
     $id = $input['id'];
     $titulo = $input['titulo'];
+    $descricao = $input['descricao'];
+    $data = $input['data_inicio'];
+    $cor = $input['cor'];
 
     $stmt = $conn->prepare("
         UPDATE eventos
-        SET titulo=?
+        SET titulo=?, descricao=?, data_inicio=?, cor=?
         WHERE id=? AND usuario_id=?
     ");
 
-    $stmt->bind_param("sii",$titulo,$id,$usuario_id);
+    $stmt->bind_param("ssssii",
+        $titulo,
+        $descricao,
+        $data,
+        $cor,
+        $id,
+        $usuario_id
+    );
+
     $stmt->execute();
 
     echo json_encode(["status"=>"editado"]);
