@@ -13,9 +13,7 @@ include('db.php');
 
 $acao = $_POST['acao'] ?? $_GET['acao'] ?? '';
 
-// =========================
-// LISTAR MEUS DECKS
-// =========================
+
 if ($acao == 'listar_meus_decks') {
     $usuario_id = (int)($_GET['usuario_id'] ?? 0);
 
@@ -45,9 +43,7 @@ if ($acao == 'listar_meus_decks') {
     echo json_encode($decks);
 }
 
-// =========================
-// LISTAR DECKS PÚBLICOS
-// =========================
+
 elseif ($acao == 'listar_publicos') {
     $busca = trim($_GET['busca'] ?? '');
     $usuario_id = (int)($_GET['usuario_id'] ?? 0);
@@ -67,7 +63,6 @@ elseif ($acao == 'listar_publicos') {
         $sql .= " AND (d.nome LIKE '%$busca%' OR d.descricao LIKE '%$busca%' OR u.nome LIKE '%$busca%')";
     }
 
-    // Excluir os próprios decks se usuario_id fornecido
     if ($usuario_id > 0) {
         $sql .= " AND d.usuario_id != $usuario_id";
     }
@@ -84,9 +79,7 @@ elseif ($acao == 'listar_publicos') {
     echo json_encode($decks);
 }
 
-// =========================
-// LISTAR DECKS DE UM USUÁRIO (públicos)
-// =========================
+// listar decks publico de um usuario 
 elseif ($acao == 'listar_decks_usuario') {
     $usuario_id = (int)($_GET['usuario_id'] ?? 0);
 
@@ -114,9 +107,7 @@ elseif ($acao == 'listar_decks_usuario') {
     echo json_encode($decks);
 }
 
-// =========================
-// CRIAR DECK
-// =========================
+
 elseif ($acao == 'criar_deck') {
     $usuario_id = (int)($_POST['usuario_id'] ?? 0);
     $nome = trim($_POST['nome'] ?? '');
@@ -144,9 +135,7 @@ elseif ($acao == 'criar_deck') {
     }
 }
 
-// =========================
-// ATUALIZAR DECK
-// =========================
+
 elseif ($acao == 'atualizar_deck') {
     $deck_id = (int)($_POST['deck_id'] ?? 0);
     $usuario_id = (int)($_POST['usuario_id'] ?? 0);
@@ -174,9 +163,7 @@ elseif ($acao == 'atualizar_deck') {
     }
 }
 
-// =========================
-// EXCLUIR DECK
-// =========================
+
 elseif ($acao == 'excluir_deck') {
     $deck_id = (int)($_POST['deck_id'] ?? 0);
     $usuario_id = (int)($_POST['usuario_id'] ?? 0);
@@ -200,9 +187,7 @@ elseif ($acao == 'excluir_deck') {
     }
 }
 
-// =========================
-// OBTER DECK COM CARDS
-// =========================
+
 elseif ($acao == 'get_deck') {
     $deck_id = (int)($_GET['deck_id'] ?? 0);
     $usuario_id = (int)($_GET['usuario_id'] ?? 0);
@@ -223,13 +208,13 @@ elseif ($acao == 'get_deck') {
         exit;
     }
 
-    // Verificar permissão (dono ou público)
+
     if ($deck['usuario_id'] != $usuario_id && $deck['publico'] != 1) {
         echo json_encode(["status" => "erro", "msg" => "Sem permissão"]);
         exit;
     }
 
-    // Buscar flashcards
+
     $stmt = $conn->prepare("SELECT id, pergunta, resposta FROM flashcards WHERE deck_id = ? ORDER BY id");
     $stmt->bind_param("i", $deck_id);
     $stmt->execute();
@@ -246,9 +231,7 @@ elseif ($acao == 'get_deck') {
     echo json_encode(["status" => "sucesso", "deck" => $deck]);
 }
 
-// =========================
-// ADICIONAR FLASHCARD
-// =========================
+
 elseif ($acao == 'adicionar_card') {
     $deck_id = (int)($_POST['deck_id'] ?? 0);
     $usuario_id = (int)($_POST['usuario_id'] ?? 0);
@@ -279,9 +262,7 @@ elseif ($acao == 'adicionar_card') {
     }
 }
 
-// =========================
-// ATUALIZAR FLASHCARD
-// =========================
+
 elseif ($acao == 'atualizar_card') {
     $card_id = (int)($_POST['card_id'] ?? 0);
     $usuario_id = (int)($_POST['usuario_id'] ?? 0);
@@ -311,9 +292,7 @@ elseif ($acao == 'atualizar_card') {
     }
 }
 
-// =========================
-// EXCLUIR FLASHCARD
-// =========================
+
 elseif ($acao == 'excluir_card') {
     $card_id = (int)($_POST['card_id'] ?? 0);
     $usuario_id = (int)($_POST['usuario_id'] ?? 0);
@@ -341,9 +320,7 @@ elseif ($acao == 'excluir_card') {
     }
 }
 
-// =========================
-// AÇÃO INVÁLIDA
-// =========================
+
 else {
     echo json_encode(["status" => "erro", "msg" => "Ação inválida"]);
 }

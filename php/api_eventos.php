@@ -46,7 +46,7 @@ case "listar":
     $ano = $_GET['ano'] ?? null;
     $mes = $_GET['mes'] ?? null;
 
-    // Se ano e mes forem fornecidos, filtra por mês
+
     if($ano && $mes) {
         $stmt = $conn->prepare("
             SELECT * FROM eventos

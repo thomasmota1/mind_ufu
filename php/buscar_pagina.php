@@ -10,7 +10,6 @@ if ($id <= 0) {
     exit;
 }
 
-// Verificar se a página pertence ao usuário
 $stmt = $conn->prepare("
     SELECT pg.* FROM paginas pg
     JOIN pastas p ON pg.pasta_id = p.id

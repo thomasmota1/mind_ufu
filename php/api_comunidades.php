@@ -1,30 +1,27 @@
 <?php
 
-// ===== CORS =====
 header("Access-Control-Allow-Origin: *"); // ajuste depois para produção
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json; charset=utf-8");
 
-// Resposta para preflight (OBRIGATÓRIO)
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
-// =================
 
-// Mostrar erros (somente desenvolvimento)
+
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-include('db.php'); // INCLUIR APENAS UMA VEZ
+include('db.php'); 
 
 $acao = $_POST['acao'] ?? $_GET['acao'] ?? '';
 
-// Obter usuario_id do request (sem fallback para evitar vazamento de dados)
 $usuario_id = (int)($_POST['usuario_id'] ?? $_GET['usuario_id'] ?? 0);
 
-// Validar usuario_id para ações que precisam de autenticação
+
 $acoes_publicas = []; // Nenhuma ação é pública
 if (!in_array($acao, $acoes_publicas) && $usuario_id <= 0) {
     echo json_encode(["status" => "erro", "msg" => "Usuário não identificado"]);
