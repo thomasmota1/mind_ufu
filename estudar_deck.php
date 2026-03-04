@@ -309,12 +309,29 @@
     </div>
 </div>
 
+<!-- Toast -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toastNotif" class="toast align-items-center border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="toastMsg"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="assets/js/sidebar.js?v=2"></script>
 
 <script>
 const API_URL = 'php/api_flashcards.php';
+
+function mostrarToast(msg, tipo = "success") {
+    const toast = document.getElementById('toastNotif');
+    toast.className = 'toast align-items-center border-0 text-bg-' + tipo;
+    document.getElementById('toastMsg').textContent = msg;
+    new bootstrap.Toast(toast).show();
+}
 let deckId = null;
 let deckData = null;
 let cards = [];
@@ -354,8 +371,8 @@ function carregarDeck() {
         const data = typeof res === 'string' ? JSON.parse(res) : res;
 
         if(data.status !== 'sucesso') {
-            alert(data.msg || 'Erro ao carregar deck');
-            window.location.href = 'flashcards.php';
+            mostrarToast(data.msg || 'Erro ao carregar deck', 'danger');
+            setTimeout(() => window.location.href = 'flashcards.php', 1500);
             return;
         }
 
@@ -394,8 +411,8 @@ function carregarDeck() {
 
         atualizarModo();
     }).fail(function() {
-        alert('Erro ao carregar deck');
-        window.location.href = 'flashcards.php';
+        mostrarToast('Erro ao carregar deck', 'danger');
+        setTimeout(() => window.location.href = 'flashcards.php', 1500);
     });
 }
 
@@ -423,6 +440,10 @@ function atualizarModo() {
         $('#study-area').show();
         index = 0;
         mostrarCard();
+    }
+    // Atualizar lista se estiver visivel
+    if($('#mode-lista').is(':visible')) {
+        renderizarLista();
     }
 }
 
@@ -537,7 +558,7 @@ function salvarCard() {
     const resposta = $('#cardResposta').val().trim();
 
     if(!pergunta || !resposta) {
-        alert('Preencha pergunta e resposta');
+        mostrarToast('Preencha pergunta e resposta', 'warning');
         return;
     }
 
@@ -565,8 +586,9 @@ function salvarCard() {
 
         if(data.status === 'sucesso') {
             carregarDeck(); // Recarregar deck
+            mostrarToast('Card salvo com sucesso!');
         } else {
-            alert(data.msg || 'Erro ao salvar');
+            mostrarToast(data.msg || 'Erro ao salvar', 'danger');
         }
     });
 }
@@ -587,6 +609,7 @@ function confirmarExcluirCard() {
         $('body').removeClass('modal-open').css('overflow', '');
 
         carregarDeck();
+        mostrarToast('Card excluido com sucesso!');
     });
 }
 

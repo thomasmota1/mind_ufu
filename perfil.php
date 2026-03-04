@@ -250,6 +250,35 @@
     </main>
 </div>
 
+<!-- Toast -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toastNotif" class="toast align-items-center border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="toastMsg"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Sair -->
+<div class="modal fade" id="modalSair" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Sair</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-0">Deseja realmente sair da sua conta?</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmarLogout()">Sair</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Excluir Conta -->
 <div class="modal fade" id="modalExcluirConta" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -452,18 +481,27 @@ function showAlert(type, msg) {
     `);
 }
 
+function mostrarToast(msg, tipo = "success") {
+    const toast = document.getElementById('toastNotif');
+    toast.className = 'toast align-items-center border-0 text-bg-' + tipo;
+    document.getElementById('toastMsg').textContent = msg;
+    new bootstrap.Toast(toast).show();
+}
+
 function logout() {
-    if (confirm('Deseja realmente sair?')) {
-        localStorage.removeItem('usuario');
-        window.location.href = 'index.html';
-    }
+    new bootstrap.Modal(document.getElementById('modalSair')).show();
+}
+
+function confirmarLogout() {
+    localStorage.removeItem('usuario');
+    window.location.href = 'index.html';
 }
 
 function excluirConta() {
     const senha = $('#senhaConfirmacao').val();
 
     if (!senha) {
-        alert('Digite sua senha para confirmar');
+        mostrarToast('Digite sua senha para confirmar', 'warning');
         return;
     }
 
@@ -480,11 +518,10 @@ function excluirConta() {
             if (modal) modal.hide();
             $('.modal-backdrop').remove();
 
-            alert('Sua conta foi excluida. Ate mais!');
             localStorage.removeItem('usuario');
             window.location.href = 'index.html';
         } else {
-            alert(data.msg || 'Erro ao excluir conta');
+            mostrarToast(data.msg || 'Erro ao excluir conta', 'danger');
         }
     });
 }
