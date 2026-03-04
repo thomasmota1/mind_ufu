@@ -29,9 +29,7 @@ if (!in_array($acao, $acoes_publicas) && $usuario_id <= 0) {
 }
 
 
-// =========================
-// LISTAR COMUNIDADES
-// =========================
+
 if ($acao == 'listar') {
 
     $sql = "SELECT c.* FROM comunidades c
@@ -51,9 +49,7 @@ if ($acao == 'listar') {
 }
 
 
-// =========================
-// DETALHES COMUNIDADE
-// =========================
+
 elseif ($acao == 'detalhes') {
 
     $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -92,9 +88,7 @@ elseif ($acao == 'detalhes') {
 }
 
 
-// =========================
-// CRIAR COMUNIDADE
-// =========================
+
 elseif ($acao == 'criar') {
 
     $nome = $conn->real_escape_string($_POST['nome'] ?? '');
@@ -119,9 +113,7 @@ elseif ($acao == 'criar') {
 }
 
 
-// =========================
-// EXCLUIR COMUNIDADE
-// =========================
+
 elseif ($acao == 'excluir_comunidade') {
 
     $comunidade_id = (int)($_POST['comunidade_id'] ?? 0);
@@ -155,9 +147,6 @@ elseif ($acao == 'excluir_comunidade') {
 }
 
 
-// =========================
-// ENTRAR EM COMUNIDADE
-// =========================
 elseif ($acao == 'entrar') {
 
     $codigo = $conn->real_escape_string($_POST['codigo'] ?? '');
@@ -179,9 +168,7 @@ elseif ($acao == 'entrar') {
 }
 
 
-// =========================
-// GET QUIZ FULL (com perguntas e alternativas)
-// =========================
+
 elseif ($acao == 'get_quiz_full') {
 
     $quiz_id = isset($_GET['quiz_id']) ? (int)$_GET['quiz_id'] : 0;
@@ -229,9 +216,7 @@ elseif ($acao == 'get_quiz_full') {
 }
 
 
-// =========================
-// SALVAR QUIZ NA LISTA DO USUÁRIO
-// =========================
+
 elseif ($acao == 'salvar_quiz_lista') {
 
     $quiz_id = isset($_POST['quiz_id']) ? (int)$_POST['quiz_id'] : 0;
@@ -257,9 +242,7 @@ elseif ($acao == 'salvar_quiz_lista') {
 }
 
 
-// =========================
-// CRIAR QUIZ (RASCUNHO)
-// =========================
+
 elseif ($acao == 'criar_quiz') {
 
     $comunidade_id = (int)($_POST['comunidade_id'] ?? 0);
@@ -282,9 +265,7 @@ elseif ($acao == 'criar_quiz') {
 }
 
 
-// =========================
-// EXCLUIR QUIZ
-// =========================
+
 elseif ($acao == 'excluir_quiz') {
 
     $quiz_id = (int)($_POST['quiz_id'] ?? 0);
@@ -309,9 +290,7 @@ elseif ($acao == 'excluir_quiz') {
 }
 
 
-// =========================
-// PUBLICAR QUIZ
-// =========================
+
 elseif ($acao == 'publicar_quiz') {
 
     $quiz_id = (int)($_POST['quiz_id'] ?? 0);
@@ -324,9 +303,6 @@ elseif ($acao == 'publicar_quiz') {
 }
 
 
-// =========================
-// LISTAR MEUS QUIZZES SALVOS
-// =========================
 elseif ($acao == 'listar_meus_quizzes') {
 
     $sql = "SELECT q.*, c.nome as comunidade_nome, c.cor as comunidade_cor, u.nome as autor_nome
@@ -351,9 +327,7 @@ elseif ($acao == 'listar_meus_quizzes') {
 }
 
 
-// =========================
-// REMOVER QUIZ DA LISTA DE SALVOS
-// =========================
+
 elseif ($acao == 'remover_salvo') {
 
     $quiz_id = (int)($_POST['quiz_id'] ?? 0);
@@ -366,9 +340,7 @@ elseif ($acao == 'remover_salvo') {
 }
 
 
-// =========================
-// CRIAR PERGUNTA
-// =========================
+
 elseif ($acao == 'criar_pergunta') {
 
     $quiz_id = (int)($_POST['quiz_id'] ?? 0);
@@ -390,9 +362,7 @@ elseif ($acao == 'criar_pergunta') {
 }
 
 
-// =========================
-// EDITAR INFO DO QUIZ (título, descrição e permite_salvar_antes)
-// =========================
+
 elseif ($acao == 'editar_quiz_info') {
 
     $quiz_id = (int)($_POST['quiz_id'] ?? 0);
@@ -408,9 +378,7 @@ elseif ($acao == 'editar_quiz_info') {
 }
 
 
-// =========================
-// LISTAR MEMBROS DA COMUNIDADE
-// =========================
+
 elseif ($acao == 'listar_membros') {
 
     $comunidade_id = isset($_GET['comunidade_id']) ? (int)$_GET['comunidade_id'] : 0;
@@ -434,10 +402,6 @@ elseif ($acao == 'listar_membros') {
     echo json_encode($membros);
 }
 
-
-// =========================
-// SALVAR PERGUNTA (criar nova ou atualizar existente)
-// =========================
 elseif ($acao == 'salvar_pergunta') {
 
     $quiz_id = (int)($_POST['quiz_id'] ?? 0);
@@ -471,9 +435,6 @@ elseif ($acao == 'salvar_pergunta') {
 }
 
 
-// =========================
-// EXCLUIR PERGUNTA
-// =========================
 elseif ($acao == 'excluir_pergunta') {
 
     $pergunta_id = (int)($_POST['pergunta_id'] ?? 0);
@@ -487,9 +448,6 @@ elseif ($acao == 'excluir_pergunta') {
 }
 
 
-// =========================
-// AÇÃO INVÁLIDA
-// =========================
 else {
 
     echo json_encode([
